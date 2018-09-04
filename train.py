@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 NUM_EPOCHS = 10
 BATCH_SIZE = 32
 PRINT_EVERY = 1
-CHECKING_BATCH_AMOUNT = 10
+CHECKING_BATCH_AMOUNT = 1
 USE_GPU = True
 DTYPE = torch.float32
 if USE_GPU and torch.cuda.is_available():
@@ -35,25 +35,30 @@ print('using device:', DEVICE)
 
 def train(model, optimizer, trainLoaders, valLoaders, num_epochs = 1):
     model = model.to(device = DEVICE)
+    loaderIndex = 0
     for e in range(num_epochs):
         print('epoch','(',e,')')
-        for loaderIndex in range(len(trainLoaders)):
+        for t, (x, _) in enumerate(trainLoaders[loaderIndex]):
+            if loaderIndex == 0:
+                loaderIndex = 1
+            elif loaderIndex == 1:
+                loaderIndex = 0
             y = torch.zeros(BATCH_SIZE) if loaderIndex == 0 else torch.ones(BATCH_SIZE)
-            for t, (x, _) in enumerate(trainLoaders[loaderIndex]):
-                x = x.to(device = DEVICE, dtype = DTYPE)
-                y = y.to(device = DEVICE, dtype = torch.long)
-                scores = model(x)
-                loss = F.cross_entropy(scores, y)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                if t % PRINT_EVERY == 0:
-                    print('Iteration %d, loss = %.4f' % (t, loss.item()))
-                    print('Validation Accuracy')
-                    checkAccuracy(valLoaders, model)
-                    print('Train Accuracy')
-                    checkAccuracy(trainLoaders, model)
-                    print()
+            x = x.to(device = DEVICE, dtype = DTYPE)
+            y = y.to(device = DEVICE, dtype = torch.long)
+            scores = model(x)
+            loss = F.cross_entropy(scores, y)
+            print(y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            if t % PRINT_EVERY == 0:
+                print('Iteration %d, loss = %.4f' % (t, loss.item()))
+                print('Validation Accuracy')
+                checkAccuracy(valLoaders, model)
+                print('Train Accuracy')
+                checkAccuracy(trainLoaders, model)
+                print()
 
 
 def checkAccuracy(loaders, model):
@@ -71,7 +76,6 @@ def checkAccuracy(loaders, model):
                 y = y.to(device = DEVICE, dtype=torch.long)
                 scores = model(x)
                 _, argMaxIndicies = scores.max(1)
-                print(argMaxIndicies)
                 num_samples += argMaxIndicies.size(0)
                 num_correct += (argMaxIndicies == y).sum()
         acc = float(num_correct) / num_samples
