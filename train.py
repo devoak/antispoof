@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore")
 NUM_EPOCHS = 10
 BATCH_SIZE = 32
 PRINT_EVERY = 1
+CHECKING_BATCH_AMOUNT = 3
 USE_GPU = True
 DTYPE = torch.float32
 if USE_GPU and torch.cuda.is_available():
@@ -63,7 +64,9 @@ def checkAccuracy(loaders, model):
     with torch.no_grad():
         for loaderIndex in range(len(loaders)):
             y = torch.zeros(BATCH_SIZE) if loaderIndex == 0 else torch.ones(BATCH_SIZE)
-            for x, _ in loaders[loaderIndex]:
+            for t, (x, _) in enumerate(loaders[loaderIndex]):
+                if t > CHECKING_BATCH_AMOUNT:
+                    break
                 x = x.to(device = DEVICE, dtype = DTYPE)  # move to device, e.g. GPU
                 y = y.to(device = DEVICE, dtype=torch.long)
                 scores = model(x)
@@ -104,7 +107,7 @@ def _main():
     optimizer = optim.SGD(model.parameters(), lr = learning_rate, momentum=0.9, nesterov=True)
 
     train(model, optimizer, [loaderTrainReal, loaderTrainSpoof], [loaderValReal, loaderValSpoof], num_epochs = NUM_EPOCHS)
-
+    model.save_state_dict('model.pt')
 
 if __name__ == '__main__':
     _main()
