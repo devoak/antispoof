@@ -71,6 +71,7 @@ def checkAccuracy(loaders, model):
                 y = y.to(device = DEVICE, dtype=torch.long)
                 scores = model(x)
                 _, argMaxIndicies = scores.max(1)
+                print(argMaxIndicies)
                 num_samples += argMaxIndicies.size(0)
                 num_correct += (argMaxIndicies == y).sum()
         acc = float(num_correct) / num_samples
