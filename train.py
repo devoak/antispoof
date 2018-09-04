@@ -35,6 +35,7 @@ print('using device:', DEVICE)
 def train(model, optimizer, trainLoaders, valLoaders, num_epochs = 1):
     model = model.to(device = DEVICE)
     for e in range(num_epochs):
+        print('epoch','(',e,')')
         for loaderIndex in range(len(trainLoaders)):
             y = torch.zeros(BATCH_SIZE) if loaderIndex == 0 else torch.ones(BATCH_SIZE)
             for t, (x, _) in enumerate(trainLoaders[loaderIndex]):
