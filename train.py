@@ -36,30 +36,36 @@ print('using device:', DEVICE)
 def train(model, optimizer, trainLoaders, valLoaders, num_epochs = 1):
     model = model.to(device = DEVICE)
     loaderIndex = 0
+    xTensorsToConcat = []
+    yTensorsToConcat = []
     for e in range(num_epochs):
         print('epoch','(',e,')')
-        for t, (x, _) in enumerate(trainLoaders[loaderIndex]):
+        for t, (x, _) in enumerate(trainLoaders[loaderIndex % 2]):
             if x.size(0) != BATCH_SIZE:
                 break
-            if loaderIndex == 0:
-                loaderIndex = 1
-            elif loaderIndex == 1:
+            loaderIndex += 1
+            y = torch.zeros(BATCH_SIZE) if loaderIndex % 2 == 0 else torch.ones(BATCH_SIZE)
+            xTensorsToConcat.append(x)
+            yTensorsToConcat.append(y)
+            if loaderIndex == 2:
                 loaderIndex = 0
-            y = torch.zeros(BATCH_SIZE) if loaderIndex == 0 else torch.ones(BATCH_SIZE)
-            x = x.to(device = DEVICE, dtype = DTYPE)
-            y = y.to(device = DEVICE, dtype = torch.long)
-            scores = model(x)
-            loss = F.cross_entropy(scores, y)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            if t % PRINT_EVERY == 0:
-                print('Iteration %d, loss = %.4f' % (t, loss.item()))
-                print('Validation Accuracy')
-                checkAccuracy(valLoaders, model)
-                print('Train Accuracy')
-                checkAccuracy(trainLoaders, model)
-                print()
+                randomIndicies = torch.randperm(BATCH_SIZE * 2)
+                x = torch.cat(xTensorsToConcat)[randomIndicies]
+                y = torch.cat(yTensorsToConcat)[randomIndicies]
+                x = x.to(device = DEVICE, dtype = DTYPE)
+                y = y.to(device = DEVICE, dtype = torch.long)
+                scores = model(x)
+                loss = F.cross_entropy(scores, y)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                if t % PRINT_EVERY == 0:
+                    print('Iteration %d, loss = %.4f' % (t, loss.item()))
+                    print('Validation Accuracy')
+                    checkAccuracy(valLoaders, model)
+                    print('Train Accuracy')
+                    checkAccuracy(trainLoaders, model)
+                    print()
 
 
 def checkAccuracy(loaders, model):
