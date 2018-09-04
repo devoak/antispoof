@@ -70,11 +70,9 @@ def checkAccuracy(loaders, model):
                 x = x.to(device = DEVICE, dtype = DTYPE)  # move to device, e.g. GPU
                 y = y.to(device = DEVICE, dtype=torch.long)
                 scores = model(x)
-                _, preds = scores.max(1)
-                if y.shape[0] != BATCH_SIZE or preds.shape[0] != BATCH_SIZE:
-                    break
-                num_correct += (preds == y).sum()
-                num_samples += preds.size(0)
+                _, argMaxIndicies = scores.max(1)
+                num_correct += (argMaxIndicies == y).sum()
+                num_samples += scores.size(0)
         acc = float(num_correct) / num_samples
         print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
 
