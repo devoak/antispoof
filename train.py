@@ -19,10 +19,10 @@ warnings.filterwarnings("ignore")
 
 
 #TODO - extract all parameters to a-lya config file
-NUM_EPOCHS = 10
+NUM_EPOCHS = 100
 BATCH_SIZE = 32
-PRINT_EVERY = 1
-CHECKING_BATCH_AMOUNT = 1
+PRINT_EVERY = 100
+CHECKING_BATCH_AMOUNT = 5
 USE_GPU = True
 DTYPE = torch.float32
 if USE_GPU and torch.cuda.is_available():
@@ -39,6 +39,8 @@ def train(model, optimizer, trainLoaders, valLoaders, num_epochs = 1):
     for e in range(num_epochs):
         print('epoch','(',e,')')
         for t, (x, _) in enumerate(trainLoaders[loaderIndex]):
+            if x.size(0) != BATCH_SIZE:
+                break
             if loaderIndex == 0:
                 loaderIndex = 1
             elif loaderIndex == 1:
@@ -48,7 +50,6 @@ def train(model, optimizer, trainLoaders, valLoaders, num_epochs = 1):
             y = y.to(device = DEVICE, dtype = torch.long)
             scores = model(x)
             loss = F.cross_entropy(scores, y)
-            print(y)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -106,7 +107,7 @@ def _main():
 
 
     learning_rate = 1e-4
-    model = models.resnet18(num_classes = 2)
+    model = models.squeezenet1_0(num_classes = 2)
     optimizer = optim.SGD(model.parameters(), lr = learning_rate, momentum=0.9, nesterov=True)
 
     train(model, optimizer, [loaderTrainReal, loaderTrainSpoof], [loaderValReal, loaderValSpoof], num_epochs = NUM_EPOCHS)
