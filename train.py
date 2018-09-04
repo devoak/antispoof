@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 NUM_EPOCHS = 10
 BATCH_SIZE = 32
 PRINT_EVERY = 1
-CHECKING_BATCH_AMOUNT = 3
+CHECKING_BATCH_AMOUNT = 10
 USE_GPU = True
 DTYPE = torch.float32
 if USE_GPU and torch.cuda.is_available():
@@ -70,10 +70,9 @@ def checkAccuracy(loaders, model):
                 x = x.to(device = DEVICE, dtype = DTYPE)  # move to device, e.g. GPU
                 y = y.to(device = DEVICE, dtype=torch.long)
                 scores = model(x)
-                for t, x in enumerate(scores):
-                    test = 0 if x[0] > x[1] else 1
-                    num_correct += (test == y[t])
-                    num_samples += 1
+                _, argMaxIndicies = scores.max(1)
+                num_samples += argMaxIndicies.size(0)
+                num_correct += (argMaxIndicies == y).sum()
         acc = float(num_correct) / num_samples
         print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
 
